@@ -57,9 +57,13 @@ mapview(im)
 # grayscale_raster <- colorize(im[[1:3]], to="col", grays=TRUE)   
 
 poly <- st_read("Data/Causas de cus de 2000 a 2013.gpkg") |>
-  st_transform(4326) 
+  st_transform(4326) |>
+  mutate(across(Causa, ~ifelse(.x == "Evento desencadenante social \n", "Evento desencadenante social", .x))) |>
+  mutate(across(Causa, ~as.factor(.x)))
 poly2 <- st_read("Data/Causas de cus de 2013 a 2024.gpkg") |>
-  st_transform(4326) 
+  st_transform(4326) |>
+  mutate(across(Causa, ~ifelse(.x == "Evento desencadenante social \n", "Evento desencadenante social", .x))) |>
+  mutate(across(Causa, ~as.factor(.x)))
 
 unique(poly$Group)
 
@@ -136,24 +140,61 @@ mapa
 # mapa
 
 # Agregar polígonos
-colores <- c("#969696","#a6cee3","#bd0026", "#ffff33","#984ea3","#4daf4a","#a65628", "#252525")
+colores <- c("#a6cee3","#bd0026", "#ffff33","#984ea3","#a65628")
 pal <- leaflet::colorFactor(colores,
                             domain = poly$Causa,
                             levels = levels(poly$Causa),
                             na.color = "#FFFFFF00")
 
-# Polígonos
+## Points
+### Create customized markers
+### Can create in several lists, that's why two lapply are used
+### In this case we really only need one level
+resul <- lapply(1:length(colores), function(j){
+  leaflet::makeAwesomeIcon(
+    icon = "circle",
+    library = "fa",
+    iconColor = colores[j],
+    markerColor = "white",
+    
+  )
+}) 
+# Cast as awesome icon list
+resul <- structure(resul, class = "leaflet_awesome_icon_set")
+
+## Add points
 mapa <- mapa %>% 
-  leaflet::addMarkers(data = poly,
-                       # stroke = TRUE, 
-                       # smoothFactor = 0.5, 
-                       # opacity = 1,
-                       # fillOpacity = 0.9,
-                       # fillColor = ~pal(Causa),
-                       # weight = 0.5,
-                       # color = ~pal(Group),
-                       group = "Causas de cambios",
-                       popup = ~poly$Causa.espe)
+  leaflet::addAwesomeMarkers(data = poly, 
+                             icon = resul,
+                             popup = ~poly$Causa.espe,
+                             group = "Causas de cambios 2000 a 2013") %>% 
+  leaflet::addAwesomeMarkers(data = poly2, 
+                             icon = resul,
+                             popup = ~poly2$Causa.espe,
+                             group = "Causas de cambios 2013 a 2024")
+
+# Polígonos
+# mapa <- mapa %>% 
+#   leaflet::addMarkers(data = poly,
+#                        # stroke = TRUE, 
+#                        # smoothFactor = 0.5, 
+#                        # opacity = 1,
+#                        # fillOpacity = 0.9,
+#                        # fillColor = ~pal(Causa),
+#                        # weight = 0.5,
+#                        # color = ~pal(Group),
+#                        group = "Causas de cambios 2000 a 2013",
+#                        popup = ~poly$Causa.espe) %>% 
+#   leaflet::addMarkers(data = poly2,
+#                       # stroke = TRUE, 
+#                       # smoothFactor = 0.5, 
+#                       # opacity = 1,
+#                       # fillOpacity = 0.9,
+#                       # fillColor = ~pal(Causa),
+#                       # weight = 0.5,
+#                       # color = ~pal(Group),
+#                       group = "Causas de cambios 2013 a 2024",
+#                       popup = ~poly$Causa.espe)
 
 # mapa
 # Agregar mapa base
@@ -166,7 +207,8 @@ for(provider in mapas_base) {
 }
 
 mapa <- mapa %>%
-  leaflet::addLayersControl(overlayGroups = c("Causas de cambios", "Cambios 2000 a 2013", "Cambios 2013 a 2024"),
+  leaflet::addLayersControl(overlayGroups = c("Causas de cambios 2000 a 2013", "Causas de cambios 2013 a 2024", 
+                                              "Cambios 2000 a 2013", "Cambios 2013 a 2024"),
                             baseGroups = mapas_base,
                             options = leaflet::layersControlOptions(collapsed = FALSE,
                                                                     hideSingleBase = TRUE)) %>%

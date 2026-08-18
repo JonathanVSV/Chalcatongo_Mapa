@@ -75,7 +75,11 @@ poly2M <- st_read("Data/Causas de Cus de 2000-2013 y 2013-2024 en mixteco/Causas
   mutate(across(Causa, ~ifelse(.x == "Evento desencadenante social \n", "Evento desencadenante social", .x))) |>
   mutate(across(Causa, ~as.factor(.x)))
 cerros <- st_read("Data/Cerros o montes de Chalcatongo en mixteco/Cerros o montes de Chalcatongo en mixteco.gpkg")|>
-  st_transform(4326) 
+  st_transform(4326) |>
+  separate(paraje, 
+           into = c("es","mix"),
+           sep = ' "') |>
+  mutate(across(mix, ~str_remove_all(.x, '"')))
 
 # Unir capas de dos idiomas
 poly <- poly |>
@@ -89,6 +93,21 @@ poly2 <- poly2 |>
             by = "Número")
 
 unique(poly$Group)
+
+# Cerros
+myIcons <- icons(
+  iconUrl = "img/peak.png",
+  iconWidth = 15, 
+  iconHeight = 15,
+  iconAnchorX = 7,
+  iconAnchorY = 7,
+  className = "Cerros"
+  # shadowWidth = 50, shadowHeight = 64,
+  # shadowAnchorX = 4, shadowAnchorY = 62
+)
+
+html_legend <- '<img src="icons/peak.png" height="15" width="15">Cerro<br>'
+                
 
 # mapview(im)
 
@@ -192,6 +211,28 @@ popups2 <- paste0(
   '</div>'
 )
 
+popups3 <- paste0(
+  '<div style="font-size:13px; min-width:170px;">',
+  
+  # English version
+  '<div class="bi-es">',
+  '<b style="font-size:14px;">', 'Cerro', '</b><br>',
+  #'<b>Categor\u00EDa causa:</b> ',  poly2$Causa.x,    '<br>',
+  #'<b>Causa:</b> ',
+  cerros$es,
+  '</div>',
+  
+  # Spanish version
+  '<div class="bi-mix">',
+  '<b style="font-size:14px;">', 'Yuku ', '</b><br>',
+  #'<b>Categor\u00EDa causa:</b> ',  poly2$Causa.x,    '<br>',
+  #'<b>Causa:</b> ',
+  cerros$mix,
+  '</div>',
+  
+  '</div>'
+)
+
 # — Title (top-left) --------------------------------------------------------
 # title_ctrl <- tags$div(
 #   class = "leaflet-control",
@@ -286,6 +327,7 @@ group_labels <- c(
   "Esri.WorldImagery"  = "<span class='bi-es'>ESRI RGB Satelital</span><span class='bi-mix'>ESRI RGB Satelital</span>",
   "Causas de cambios 2000 a 2013" = "<span class='bi-es'>Causas de cambios 2000 a 2013</span><span class='bi-mix'>Non Kuu ja sa'a  ja ni na saama  kuia uxi xiko ji kuia oko uxi uni</span>",
   "Causas de cambios 2013 a 2024"= "<span class='bi-es'>Causas de cambios 2013 a 2024</span><span class='bi-mix'>Non kuu ja sa'a ja na saama ñu'un ñuuyo ja ni ku kuia oko uxi uni ji kuia oko oko kuun</span>",
+  "Cerros"= "<span class='bi-es'>Cerros</span><span class='bi-mix'>Yuku</span>",
   "Cambios 2000 a 2013"    = "<span class='bi-es'>Cambios 2000 a 2013</span><span class='bi-mix'>Tu'un ja ni na sama kuia uxi xiko ji kuia oko uxi uni </span>",
   "Cambios 2013 a 2024"    = "<span class='bi-es'>Cambios 2013 a 2024</span><span class='bi-mix'>Tu'un ja ni na sama kuia oko uxi uni ji kuia oko oko kuun</span>"
 )
@@ -331,7 +373,11 @@ mapa <- mapa %>%
   leaflet::addAwesomeMarkers(data = poly2, 
                              icon = resul,
                              popup = popups2,
-                             group = "Causas de cambios 2013 a 2024")
+                             group = "Causas de cambios 2013 a 2024") %>%
+  leaflet::addMarkers(data = cerros,
+             popup = popups3,
+             group = "Cerros",
+             icon = myIcons)
 
 mapa
 
@@ -342,6 +388,7 @@ mapa <- mapa %>%
   addControl(legend_ctrl, position = "bottomright") %>%
   leaflet::addLayersControl(overlayGroups = c("Causas de cambios 2000 a 2013", 
                                               "Causas de cambios 2013 a 2024",
+                                              "Cerros",
                                               "Cambios 2000 a 2013", 
                                               "Cambios 2013 a 2024"),
                             baseGroups = mapas_base,

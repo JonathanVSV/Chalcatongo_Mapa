@@ -455,6 +455,23 @@ lang_btn <- tags$button(
   tags$div(class = "bi-mix", "\U0001F310  Tu’un Savi")
 )
 
+# Título del mapa
+titulo <- tags$div(
+  id = "map-title",
+  tags$div(class = "bi-es", "Mapeo del cambio de cubierta y uso de suelo para el atlas interactivo del municipio de Chalcatongo de Hidalgo, Tlaxiaco, Oaxaca"),
+  # Falta la traducción al tu'un savi; por el momento dejar el título en español
+  tags$div(class = "bi-mix", "Mapeo del cambio de cubierta y uso de suelo para el atlas interactivo del municipio de Chalcatongo de Hidalgo, Tlaxiaco, Oaxaca")
+)
+
+# Logos. Incrustar logos institucionales 
+logos <- c("Data/logo_unicha.png", "Data/logo_unam.png", "Data/logo_ciga.png")
+logos_ctrl <- tags$div(
+  id = "map-logos",
+  lapply(logos, function(f) {
+    tags$img(src = base64enc::dataURI(file = f, mime = "image/png"))
+  })
+)
+
 lang_css <- tags$style(HTML("
   /* ── Idioma ─────────────────────────────────────────────────────────── */
   .bi-mix { display: none;  }
@@ -463,9 +480,29 @@ lang_css <- tags$style(HTML("
   body.lang-mix .bi-mix { display: block; }
   #lang-btn:hover { background: #f0f0f0 !important; }
 
+  /* ── Logos ──────────────────────────────────────────────────────────── */
+  #map-logos {
+    position: fixed; bottom: 40px; right: 10px;
+    z-index: 1001; display: flex; align-items: center; gap: 14px;
+    background: rgba(255,255,255,.92); padding: 6px 14px; border-radius: 6px;
+    box-shadow: 0 1px 5px rgba(0,0,0,.4);
+  }
+  #map-logos img { height: 52px; width: auto; display: block; }
+
+  /* ── Título ─────────────────────────────────────────────────────────── */
+  #map-title {
+    position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+    z-index: 1001; text-align: center;
+    width: max-content; max-width: calc(100vw - 700px); min-width: 280px;
+    background: rgba(255,255,255,.92); padding: 8px 16px; border-radius: 6px;
+    box-shadow: 0 1px 5px rgba(0,0,0,.4);
+    font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    font-size: 15px; font-weight: bold; line-height: 1.3; color: #333;
+  }
+
   /* ── Control de capas agrupado ──────────────────────────────────────── */
   .leaflet-control-layers-expanded {
-    max-height: calc(100vh - 140px);
+    max-height: calc(100vh - 230px);   /* deja espacio para los logos */
     overflow-y: auto;
     max-width: 320px;
   }
@@ -553,7 +590,7 @@ mapa <- mapa |>
 
 # prependContent pone el CSS antes del widget; appendContent el JS al final
 mapa <- mapa |>
-  htmlwidgets::prependContent(lang_css) |>
+  htmlwidgets::prependContent(lang_css, titulo, logos_ctrl) |>
   htmlwidgets::appendContent(lang_js)
 
 mapa

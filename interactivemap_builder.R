@@ -92,8 +92,8 @@ poly  <- leer_causas("Data/Causas de cus de 2000 a 2013.gpkg")
 poly2 <- leer_causas("Data/Causas de cus de 2013 a 2024.gpkg")
 
 # Mixteco
-polyM  <- leer_causas("Data/Causas de Cus de 2000-2013 y 2013-2024 en mixteco/Causas de Cus 2000 a 2013 en mixteco.gpkg")
-poly2M <- leer_causas("Data/Causas de Cus de 2000-2013 y 2013-2024 en mixteco/Causas de Cus 2013 a 2024 en mixteco.gpkg")
+polyM  <- leer_causas("Data/Causas de Cus 2000 a 2013 en mixteco.gpkg")
+poly2M <- leer_causas("Data/Causas de Cus 2013 a 2024 en mixteco.gpkg")
 
 # Unir capas de dos idiomas (Causa.x = español, Causa.y = mixteco)
 poly <- poly |>
@@ -118,7 +118,7 @@ causas_mix <- bind_rows(st_drop_geometry(poly)  |> select(Causa.x, Causa.y),
   deframe()
 
 # Cerros
-cerros <- st_read("Data/Cerros o montes de Chalcatongo en mixteco/Cerros o montes de Chalcatongo en mixteco.gpkg")|>
+cerros <- st_read("Data/Cerros o montes de Chalcatongo en mixteco.gpkg")|>
   st_transform(4326) |>
   separate(paraje,
            into = c("es","mix"),
@@ -127,7 +127,7 @@ cerros <- st_read("Data/Cerros o montes de Chalcatongo en mixteco/Cerros o monte
 
 # Agregar ícono de cerros
 myIcons <- icons(
-  iconUrl = "img/peak.png",
+  iconUrl = "Data/peak.png",
   iconWidth = 15,
   iconHeight = 15,
   iconAnchorX = 7,
@@ -253,7 +253,7 @@ for (p in periodos) {
   ## Raster: una sola capa con todos los tipos de cambio del periodo
   r <- terra::as.int(p$raster)
   gid <- paste0("cambio_", p$id)
-
+  
   mapa <- mapa |>
     leaflet::addRasterImage(
       raster::raster(r),
@@ -263,12 +263,12 @@ for (p in periodos) {
       opacity = opacidad_cambios,
       group = gid
     )
-
+  
   capas <- add_row(capas, id = gid,
                    label = etiqueta_cambios(subsecciones$cambio$es,
                                             subsecciones$cambio$mix),
                    periodo = p$id, seccion = "cambio")
-
+  
   ## Puntos: una capa por causa de cambio, color según la causa
   for (k in seq_along(colores_causas)) {
     causa <- names(colores_causas)[k]
@@ -310,7 +310,7 @@ etiquetas <- c(
   setNames(capas$label, capas$id),
   "Esri.WorldTopoMap" = etiqueta("ESRI Topografía", "ESRI Topografía"),
   "Esri.WorldImagery" = etiqueta("ESRI RGB Satelital", "ESRI RGB Satelital"),
-  "Cerros" = "<img src='img/peak.png' class='sw-img'>" |>
+  "Cerros" = "<img src='Data/peak.png' class='sw-img'>" |>
     paste0(etiqueta("Cerros", "Yuku"))
 )
 
@@ -324,12 +324,12 @@ datos_control <- list(
                           "<span class='bi-mix'>", .x$mix, "</span>")),
     map_chr(periodos, "id")),
   subs = map(subsecciones["causa"], ~paste0("<span class='bi-es'>", .x$es, "</span>",
-                                   "<span class='bi-mix'>", .x$mix, "</span>"))
+                                            "<span class='bi-mix'>", .x$mix, "</span>"))
 )
 
 # Agregar cerros en los controles de capas
-peak_uri <- base64enc::dataURI(file = "img/peak.png", mime = "image/png")
-datos_control$labels$Cerros <- sub("img/peak.png", peak_uri,
+peak_uri <- base64enc::dataURI(file = "Data/peak.png", mime = "image/png")
+datos_control$labels$Cerros <- sub("Data/peak.png", peak_uri,
                                    datos_control$labels$Cerros, fixed = TRUE)
 
 # JS: etiquetas bilingües con muestras de color, encabezados por periodo

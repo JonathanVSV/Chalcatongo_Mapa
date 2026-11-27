@@ -460,7 +460,7 @@ titulo <- tags$div(
   id = "map-title",
   tags$div(class = "bi-es", "Mapeo del cambio de cubierta y uso de suelo para el atlas interactivo del municipio de Chalcatongo de Hidalgo, Tlaxiaco, Oaxaca"),
   # Falta la traducción al tu'un savi; por el momento dejar el título en español
-  tags$div(class = "bi-mix", "Mapeo del cambio de cubierta y uso de suelo para el atlas interactivo del municipio de Chalcatongo de Hidalgo, Tlaxiaco, Oaxaca")
+  tags$div(class = "bi-mix", "Tutu nuu kastuu jaa na sama jaa yoo nuu ñu'un ñuuyo Ñuu Ndeya, Ndi jinuu, Nundua")
 )
 
 # Logos. Incrustar logos institucionales 
@@ -596,6 +596,9 @@ mapa <- mapa |>
 mapa
 
 # Exportar a html----
+if (!dir.exists("Map")) {
+  dir.create("Map", recursive = TRUE)
+}
 htmlwidgets::saveWidget(mapa,
                         "Map/index.html",
                         selfcontained = TRUE)
